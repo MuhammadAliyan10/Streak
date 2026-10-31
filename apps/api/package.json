@@ -1,0 +1,39 @@
+{
+  "name": "@streak/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "db:generate": "drizzle-kit generate",
+    "auth:schema": "auth generate --config src/modules/auth/auth.ts --output src/db/schema/auth-schema.ts --adapter drizzle --dialect postgresql --yes",
+    "db:migrate": "tsx src/db/migrate.ts",
+    "db:check": "drizzle-kit check"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.1.0",
+    "@fastify/helmet": "^13.0.0",
+    "@fastify/rate-limit": "^10.3.0",
+    "@better-auth/expo": "^1.7.0",
+    "better-auth": "^1.7.0",
+    "dotenv": "^17.2.0",
+    "drizzle-orm": "^0.44.0",
+    "fastify": "^5.6.0",
+    "pg": "^8.16.0",
+    "zod": "^4.1.0",
+    "@streak/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "auth": "^1.7.0",
+    "@types/node": "^22.18.0",
+    "@types/pg": "^8.15.0",
+    "drizzle-kit": "^0.31.0",
+    "tsx": "^4.20.0",
+    "typescript": "~6.0.3",
+    "vitest": "^3.2.0"
+  }
+}

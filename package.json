@@ -1,0 +1,36 @@
+{
+  "name": "streak-workspace",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=22.13 <23"
+  },
+  "scripts": {
+    "dev:mobile": "pnpm --filter @streak/mobile start",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "pnpm -r --if-present test",
+    "owner-token:generate": "node scripts/generate-owner-token.mjs",
+    "test:functions": "node --experimental-strip-types --test neon/functions/*.test.ts",
+    "typecheck:functions": "tsc --noEmit -p neon/tsconfig.json"
+  },
+  "dependencies": {
+    "pg": "^8.23.1",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@neon/config": "^1.9.5",
+    "eslint": "^10.13.0",
+    "eslint-config-prettier": "^10.1.0",
+    "globals": "^16.5.0",
+    "prettier": "^3.6.0",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.46.0",
+    "@types/node": "^22.18.0",
+    "@types/pg": "^8.15.0"
+  }
+}

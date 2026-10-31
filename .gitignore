@@ -1,0 +1,16 @@
+node_modules/
+.pnpm-store/
+.expo/
+.codex/tmp/
+dist/
+coverage/
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example
+apps/mobile/android/
+apps/mobile/ios/
+.owner-token
+.owner-token.next
+apps/api/drizzle/meta/_journal.json.bak

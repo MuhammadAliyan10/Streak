@@ -1,0 +1,6 @@
+pnpm-lock.yaml
+node_modules/
+apps/mobile/.expo/
+apps/api/drizzle/meta/
+apps/mobile/expo-env.d.ts
+.agents/skills/
