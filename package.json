@@ -1,6 +1,15 @@
 {
   "name": "streak-workspace",
   "private": true,
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MuhammadAliyan10/Streak.git"
+  },
+  "homepage": "https://github.com/MuhammadAliyan10/Streak#readme",
+  "bugs": {
+    "url": "https://github.com/MuhammadAliyan10/Streak/issues"
+  },
   "type": "module",
   "packageManager": "pnpm@11.25.0",
   "engines": {
