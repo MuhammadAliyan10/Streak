@@ -33,7 +33,13 @@ function readableError(error: unknown): string {
   return error instanceof OwnerServiceError ? error.message : 'Something went wrong. Try again.';
 }
 
-export function OwnerGate() {
+export function OwnerGate({
+  setupOnly = false,
+  onSetupComplete,
+}: {
+  setupOnly?: boolean;
+  onSetupComplete?: () => void;
+}) {
   const [status, setStatus] = useState<GateStatus>('loading');
   const [message, setMessage] = useState<string | null>(null);
   const [database, setDatabase] = useState<SQLiteDatabase | null>(null);
@@ -120,6 +126,23 @@ export function OwnerGate() {
 
   if (status === 'setup') {
     return <OwnerSetup message={message} onSuccess={finishOwnerSetup} />;
+  }
+
+  if (setupOnly && status === 'connected') {
+    return (
+      <ScreenLayout>
+        <Header />
+        <View className="mt-8">
+          <Text className="text-2xl font-bold text-ink">Private setup complete</Text>
+          <Text className="mt-2 text-base leading-6 text-slate-600">
+            Your owner token is saved securely. Create your account to continue.
+          </Text>
+          <View className="mt-6">
+            <Button title="Continue to account setup" onPress={() => onSetupComplete?.()} />
+          </View>
+        </View>
+      </ScreenLayout>
+    );
   }
 
   if (status === 'offline') {

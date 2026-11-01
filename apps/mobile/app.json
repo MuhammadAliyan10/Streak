@@ -26,6 +26,16 @@
           "resizeMode": "contain",
           "backgroundColor": "#F8FAFC"
         }
+      ],
+      ["expo-sqlite", { "useSQLCipher": true }],
+      "expo-notifications",
+      [
+        "@appeeky/expo-healthkit",
+        {
+          "healthSharePermission": "Allow Streak to read your walking distance for the habits you enable.",
+          "healthUpdatePermission": false,
+          "healthConnectPermissions": ["READ_DISTANCE"]
+        }
       ]
     ],
     "experiments": { "typedRoutes": true }

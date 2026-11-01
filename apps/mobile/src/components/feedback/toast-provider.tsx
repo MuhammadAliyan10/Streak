@@ -9,9 +9,11 @@ import {
 } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
-type ToastTone = 'success' | 'error' | 'info';
+export type ToastTone = 'success' | 'error' | 'info';
 type ToastItem = { id: number; message: string; tone: ToastTone };
-type ToastContextValue = { showToast: (message: string, tone?: ToastTone) => void };
+type ToastContextValue = {
+  showToast: (message: string, tone?: ToastTone, durationMs?: number) => void;
+};
 
 const ToastContext = createContext<ToastContextValue | null>(null);
 let nextToastId = 0;
@@ -26,10 +28,19 @@ export function ToastProvider({ children }: PropsWithChildren) {
     setToast(null);
   }, []);
 
-  const showToast = useCallback((message: string, tone: ToastTone = 'info') => {
+  const showToast = useCallback((message: string, tone: ToastTone = 'info', durationMs = 3_500) => {
+    const cleanMessage = message.trim();
+    if (!cleanMessage) return;
     if (timeout.current) clearTimeout(timeout.current);
-    setToast({ id: ++nextToastId, message, tone });
-    timeout.current = setTimeout(() => setToast(null), 3_500);
+    const id = ++nextToastId;
+    setToast({ id, message: cleanMessage, tone });
+    timeout.current = setTimeout(
+      () => {
+        setToast((current) => (current?.id === id ? null : current));
+        timeout.current = null;
+      },
+      Math.max(durationMs, 1_000),
+    );
   }, []);
 
   useEffect(

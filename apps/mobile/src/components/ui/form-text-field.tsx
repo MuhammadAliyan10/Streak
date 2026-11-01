@@ -18,8 +18,11 @@ type FormTextFieldProps<T extends FieldValues, N extends FieldPathByValue<T, str
   keyboardType?: KeyboardTypeOptions;
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
   autoComplete?: 'off' | 'one-time-code' | 'password' | 'new-password';
+  textContentType?: 'emailAddress' | 'password' | 'newPassword' | 'name';
   returnKeyType?: ReturnKeyTypeOptions;
   onSubmitEditing?: () => void;
+  multiline?: boolean;
+  numberOfLines?: number;
 };
 
 export function FormTextField<T extends FieldValues, N extends FieldPathByValue<T, string>>({
@@ -31,8 +34,11 @@ export function FormTextField<T extends FieldValues, N extends FieldPathByValue<
   keyboardType = 'default',
   autoCapitalize = 'none',
   autoComplete = 'off',
+  textContentType,
   returnKeyType = 'done',
   onSubmitEditing,
+  multiline = false,
+  numberOfLines = 1,
 }: FormTextFieldProps<T, N>) {
   const [showSecret, setShowSecret] = useState(false);
 
@@ -58,10 +64,20 @@ export function FormTextField<T extends FieldValues, N extends FieldPathByValue<
               keyboardType={keyboardType}
               autoCapitalize={autoCapitalize}
               autoComplete={autoComplete}
-              textContentType={secure ? 'password' : undefined}
+              textContentType={
+                textContentType ??
+                (secure
+                  ? autoComplete === 'new-password'
+                    ? 'newPassword'
+                    : 'password'
+                  : undefined)
+              }
               returnKeyType={returnKeyType}
               onSubmitEditing={onSubmitEditing}
-              className="min-h-12 flex-1 py-3 text-base text-ink"
+              multiline={multiline}
+              numberOfLines={multiline ? numberOfLines : undefined}
+              textAlignVertical={multiline ? 'top' : 'center'}
+              className={`${multiline ? 'min-h-28' : 'min-h-12'} flex-1 py-3 text-base text-ink`}
               style={{ fontSize: 16 }}
             />
             {secure ? (

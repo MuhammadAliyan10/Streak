@@ -1,6 +1,7 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
 import type { Pool, PoolClient } from 'pg';
+import { createAuthHandler } from './auth-handler.ts';
 
 const tokenSchema = z
   .string()
@@ -50,7 +51,7 @@ function bearerToken(request: Request): string | null {
   return token.length <= 128 ? token : null;
 }
 
-async function isAuthorized(request: Request, pool: Pool): Promise<boolean> {
+export async function isOwnerTokenAuthorized(request: Request, pool: Pool): Promise<boolean> {
   const token = bearerToken(request);
   if (!token || !tokenSchema.safeParse(token).success) return false;
   const { rows } = await pool.query<{ token_hash: string }>(
@@ -89,13 +90,17 @@ async function syncOperations(
 }
 
 export function createOwnerHandler(pool: Pool) {
+  const authHandler = createAuthHandler(pool, (request) => isOwnerTokenAuthorized(request, pool));
   return async function fetch(request: Request): Promise<Response> {
     const path = new URL(request.url).pathname.replace(/\/$/, '') || '/';
+
+    const authResponse = await authHandler(request);
+    if (authResponse) return authResponse;
 
     if (request.method === 'GET' && path === '/health') return json({ status: 'ok' });
     if (request.method === 'POST' && path === '/v1/owner/verify') {
       try {
-        return (await isAuthorized(request, pool))
+        return (await isOwnerTokenAuthorized(request, pool))
           ? json({ verified: true })
           : json({ error: 'owner_token_invalid' }, 401);
       } catch {
@@ -105,7 +110,7 @@ export function createOwnerHandler(pool: Pool) {
 
     if (request.method === 'POST' && path === '/v1/owner/rotate') {
       try {
-        if (!(await isAuthorized(request, pool)))
+        if (!(await isOwnerTokenAuthorized(request, pool)))
           return json({ error: 'owner_token_invalid' }, 401);
         const parsed = rotateBodySchema.safeParse(await readJson(request));
         if (!parsed.success) return json({ error: 'invalid_rotation_request' }, 400);
@@ -133,7 +138,7 @@ export function createOwnerHandler(pool: Pool) {
 
     if (request.method === 'GET' && path === '/v1/sync') {
       try {
-        if (!(await isAuthorized(request, pool)))
+        if (!(await isOwnerTokenAuthorized(request, pool)))
           return json({ error: 'owner_token_invalid' }, 401);
         const url = new URL(request.url);
         const hasTimestamp = url.searchParams.has('afterReceivedAt');
@@ -181,7 +186,7 @@ export function createOwnerHandler(pool: Pool) {
 
     if (request.method === 'POST' && path === '/v1/sync') {
       try {
-        if (!(await isAuthorized(request, pool)))
+        if (!(await isOwnerTokenAuthorized(request, pool)))
           return json({ error: 'owner_token_invalid' }, 401);
         const parsed = parseSyncRequest(await readJson(request));
         if (!parsed.success) return json({ error: 'invalid_sync_request' }, 400);

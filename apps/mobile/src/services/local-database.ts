@@ -1,5 +1,14 @@
 import * as SQLite from 'expo-sqlite';
 import { z } from 'zod';
+import { habitMigrationV2 } from '../features/habits/habit-migration';
+import { plannerMigrationV3 } from '../features/planner/planner-migration';
+import { activityMigrationV4 } from '../features/habits/activity-migration';
+import { focusMigrationV5 } from '../features/focus/focus-migration';
+import { goalsRoutinesMigrationV6 } from '../features/goals-routines/goals-routines-migration';
+import { notificationMigrationV7 } from '../features/notifications/notification-migration';
+import { walkingTrackingMigrationV8 } from '../features/habits/walking-tracking-migration';
+import { digitalUsageMigrationV9 } from '../features/habits/digital-usage-migration';
+import { dailyReviewMigrationV10 } from '../features/planner/daily-review-migration';
 
 const DATABASE_NAME = 'streak.db';
 
@@ -32,6 +41,15 @@ const migrations: ReadonlyArray<{ version: number; sql: string }> = [
       INSERT OR IGNORE INTO sync_checkpoint (singleton_id, last_seen_at, last_seen_id) VALUES (1, NULL, NULL);
     `,
   },
+  { version: 2, sql: habitMigrationV2 },
+  { version: 3, sql: plannerMigrationV3 },
+  { version: 4, sql: activityMigrationV4 },
+  { version: 5, sql: focusMigrationV5 },
+  { version: 6, sql: goalsRoutinesMigrationV6 },
+  { version: 7, sql: notificationMigrationV7 },
+  { version: 8, sql: walkingTrackingMigrationV8 },
+  { version: 9, sql: digitalUsageMigrationV9 },
+  { version: 10, sql: dailyReviewMigrationV10 },
 ];
 
 export type SyncOperation = {
@@ -45,6 +63,7 @@ const syncPayloadSchema = z.record(z.string(), z.unknown());
 
 export async function initializeLocalDatabase(): Promise<SQLite.SQLiteDatabase> {
   const database = await SQLite.openDatabaseAsync(DATABASE_NAME);
+  await database.execAsync('PRAGMA foreign_keys = ON');
   const currentVersion = await database.getFirstAsync<{ user_version: number }>(
     'PRAGMA user_version',
   );
