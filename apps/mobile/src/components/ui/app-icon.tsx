@@ -12,7 +12,9 @@ export type AppIconName =
   | 'chevronRight'
   | 'plus'
   | 'clock'
-  | 'chart';
+  | 'chart'
+  | 'eye'
+  | 'eyeClosed';
 type AppIconProps = { name: AppIconName; color?: string; size?: number };
 
 export function AppIcon({ name, color = '#475569', size = 22 }: AppIconProps) {
@@ -109,6 +111,22 @@ export function AppIcon({ name, color = '#475569', size = 22 }: AppIconProps) {
       return (
         <SymbolView
           name={{ ios: 'chart.bar', android: 'bar_chart', web: 'bar_chart' }}
+          size={size}
+          tintColor={color}
+        />
+      );
+    case 'eye':
+      return (
+        <SymbolView
+          name={{ ios: 'eye', android: 'visibility', web: 'visibility' }}
+          size={size}
+          tintColor={color}
+        />
+      );
+    case 'eyeClosed':
+      return (
+        <SymbolView
+          name={{ ios: 'eye.slash', android: 'visibility_off', web: 'visibility_off' }}
           size={size}
           tintColor={color}
         />

@@ -48,7 +48,7 @@ export function Button({
       accessibilityState={{ disabled: unavailable, busy: loading }}
       disabled={unavailable}
       onPress={onPress}
-      className={`${heights[size]} flex-row items-center justify-center rounded-xl px-5 ${variants[variant]} ${fullWidth ? 'w-full' : 'self-start'} ${unavailable ? 'opacity-50' : ''}`}
+      className={`${heights[size]} flex-row items-center justify-center rounded-lg px-5 ${variants[variant]} ${fullWidth ? 'w-full' : 'self-start'} ${unavailable ? 'opacity-50' : ''}`}
     >
       {loading ? (
         <ActivityIndicator color={variant === 'primary' ? '#FFFFFF' : '#4F46E5'} />

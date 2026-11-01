@@ -12,6 +12,7 @@ import { Button, IconButton } from '../../components/ui/button';
 import { EmptyState, ErrorState } from '../../components/ui/feedback-state';
 import { FormTextField } from '../../components/ui/form-text-field';
 import { useAuth } from '../auth/auth-context';
+import { canAccessPrivateRoutes } from '../auth/auth-navigation';
 import {
   addHabitEntry,
   createActivityLog,
@@ -390,7 +391,7 @@ export function HabitsScreen() {
     },
     onError: () => showToast('Could not log this activity. Try again.', 'error'),
   });
-  if (status !== 'authenticated') return <Redirect href="/" />;
+  if (!canAccessPrivateRoutes(status)) return <Redirect href="/" />;
   const items = habits.data ?? [];
   return (
     <ScreenLayout
@@ -708,7 +709,7 @@ export function HabitDetailScreen() {
     },
     onError: () => showToast('Could not restore this activity.', 'error'),
   });
-  if (status !== 'authenticated') return <Redirect href="/" />;
+  if (!canAccessPrivateRoutes(status)) return <Redirect href="/" />;
   if (query.isLoading)
     return (
       <ScreenLayout>
@@ -1186,7 +1187,7 @@ export function HabitHistoryScreen() {
         })),
       ),
   });
-  if (status !== 'authenticated') return <Redirect href="/" />;
+  if (!canAccessPrivateRoutes(status)) return <Redirect href="/" />;
   return (
     <ScreenLayout
       bottomNavigation={<HabitNavigation selected="history" />}

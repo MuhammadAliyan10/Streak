@@ -50,3 +50,4 @@ DerivedData/
 *.aab
 *.ipa
 apps/api/drizzle/meta/_journal.json.bak
+.neon

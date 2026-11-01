@@ -9,15 +9,16 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --experimental-sqlite --test src/features/habits/domain/*.test.ts src/features/habits/*.test.ts src/features/planner/*.test.ts src/features/insights/*.test.ts src/features/focus/*.test.ts src/features/goals-routines/*.test.ts src/features/notifications/*.test.ts"
+    "test": "node --experimental-strip-types --experimental-sqlite --test src/features/auth/*.test.ts src/features/habits/domain/*.test.ts src/features/habits/*.test.ts src/features/planner/*.test.ts src/features/insights/*.test.ts src/features/focus/*.test.ts src/features/goals-routines/*.test.ts src/features/notifications/*.test.ts"
   },
   "dependencies": {
-    "@hookform/resolvers": "^6.0.2",
     "@appeeky/expo-healthkit": "0.4.2",
+    "@hookform/resolvers": "^6.0.2",
     "@react-native-community/datetimepicker": "~9.1.0",
     "@streak/contracts": "workspace:*",
     "@tanstack/react-query": "^5.90.0",
     "expo": "~57.0.31",
+    "expo-build-properties": "~57.0.22",
     "expo-constants": "~57.0.0",
     "expo-dev-client": "~57.0.20",
     "expo-linking": "~57.0.0",

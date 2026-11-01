@@ -44,8 +44,6 @@ function derivePassword(password: string, salt: Buffer, length: number): Promise
 
 type UserProfile = { id: string; fullName: string; email: string };
 type SessionResponse = { token: string; expiresAt: string; user: UserProfile };
-type IsOwnerAuthorized = (request: Request) => Promise<boolean>;
-
 function json(body: unknown, status = 200): Response {
   return Response.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
 }
@@ -151,35 +149,18 @@ async function recordFailedLogin(pool: Pool, email: string): Promise<void> {
   );
 }
 
-export function createAuthHandler(pool: Pool, isOwnerAuthorized: IsOwnerAuthorized) {
+export function createAuthHandler(pool: Pool) {
   return async (request: Request): Promise<Response | null> => {
     const path = new URL(request.url).pathname.replace(/\/$/, '');
 
     if (request.method === 'POST' && path === '/v1/auth/register') {
       try {
-        if (!(await isOwnerAuthorized(request)))
-          return json({ error: 'owner_setup_required' }, 401);
         const parsed = registerSchema.safeParse(await readJson(request));
         if (!parsed.success) return json({ error: 'invalid_registration' }, 400);
         const passwordHash = await hashPassword(parsed.data.password);
         const client = await pool.connect();
         try {
           await client.query('BEGIN');
-          const owner = await client.query<{ token_hash: string }>(
-            'SELECT token_hash FROM private.owner_access WHERE singleton_id = 1 FOR UPDATE',
-          );
-          const bearer = request.headers.get('authorization')?.slice(7) ?? '';
-          if (!owner.rows[0] || !bearer) {
-            await client.query('ROLLBACK');
-            return json({ error: 'owner_setup_required' }, 401);
-          }
-          const digest = createHash('sha256').update(bearer, 'utf8').digest('hex');
-          const expected = Buffer.from(owner.rows[0].token_hash, 'hex');
-          const actual = Buffer.from(digest, 'hex');
-          if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
-            await client.query('ROLLBACK');
-            return json({ error: 'owner_setup_required' }, 401);
-          }
           const exists = await client.query('SELECT 1 FROM private.users WHERE owner_slot = 1');
           if (exists.rowCount) {
             await client.query('ROLLBACK');

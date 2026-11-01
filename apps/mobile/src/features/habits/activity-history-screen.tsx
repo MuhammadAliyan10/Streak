@@ -8,6 +8,7 @@ import { AppHeader } from '../../components/layout/app-header';
 import { Button } from '../../components/ui/button';
 import { EmptyState, ErrorState } from '../../components/ui/feedback-state';
 import { useAuth } from '../auth/auth-context';
+import { canAccessPrivateRoutes } from '../auth/auth-navigation';
 import { ActivityLogRow, ActivityLogSheet } from './activity-components';
 import {
   createActivityLog,
@@ -67,7 +68,7 @@ export function ActivityHistoryScreen() {
     },
     onError: () => showToast('Could not restore this activity.', 'error'),
   });
-  if (status !== 'authenticated') return <Redirect href="/" />;
+  if (!canAccessPrivateRoutes(status)) return <Redirect href="/" />;
   const habit = habitQuery.data?.habit;
   if (habitQuery.isError)
     return (

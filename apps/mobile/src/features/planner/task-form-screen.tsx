@@ -11,6 +11,7 @@ import { Button } from '../../components/ui/button';
 import { ErrorState } from '../../components/ui/feedback-state';
 import { FormTextField } from '../../components/ui/form-text-field';
 import { useAuth } from '../auth/auth-context';
+import { canAccessPrivateRoutes } from '../auth/auth-navigation';
 import { todayInTimezone } from '../habits/domain/habit-domain';
 import { HabitNavigation } from '../habits/habit-navigation';
 import { getTask, saveTask } from './planner-repository';
@@ -86,7 +87,7 @@ export function TaskFormScreen({ editing = false }: { editing?: boolean }) {
     },
     onError: () => showToast('Could not save this task. Try again.', 'error'),
   });
-  if (status !== 'authenticated') return <Redirect href="/" />;
+  if (!canAccessPrivateRoutes(status)) return <Redirect href="/" />;
   if (editing && task.isLoading)
     return (
       <ScreenLayout>

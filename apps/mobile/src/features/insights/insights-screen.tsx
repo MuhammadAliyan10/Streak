@@ -8,6 +8,7 @@ import { AppIcon } from '../../components/ui/app-icon';
 import { Button, IconButton } from '../../components/ui/button';
 import { EmptyState, ErrorState } from '../../components/ui/feedback-state';
 import { useAuth } from '../auth/auth-context';
+import { canAccessPrivateRoutes } from '../auth/auth-navigation';
 import { dateAdd, todayInTimezone } from '../habits/domain/habit-domain';
 import { formatGoalTarget } from '../goals-routines/goal-repository';
 import { getInsightsData, type InsightsData } from './insights-repository';
@@ -166,7 +167,7 @@ export function InsightsScreen() {
         <Text className="py-10 text-center text-slate-600">Loading Insights…</Text>
       </ScreenLayout>
     );
-  if (status !== 'authenticated') return <Redirect href="/" />;
+  if (!canAccessPrivateRoutes(status)) return <Redirect href="/" />;
 
   return (
     <ScreenLayout

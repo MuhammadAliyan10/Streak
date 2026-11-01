@@ -1,8 +1,8 @@
 import * as SecureStore from 'expo-secure-store';
 import { z } from 'zod';
-import { getOwnerToken } from '../owner/owner-service';
 
 const SESSION_KEY = 'streak.auth-session.v1';
+const CACHED_USER_KEY = 'streak.auth-user.v1';
 const PENDING_REVOKE_KEY = 'streak.auth-revoke-pending.v1';
 const userSchema = z.object({
   id: z.string().uuid(),
@@ -63,8 +63,7 @@ async function request<T>(
       const errorPayload = z.object({ error: z.string() }).safeParse(payload);
       const code = errorPayload.success ? errorPayload.data.error : 'service_unavailable';
       const messages: Record<string, string> = {
-        owner_setup_required: 'Complete private owner setup before creating the account.',
-        owner_already_registered: 'The owner account already exists. Sign in instead.',
+        owner_already_registered: 'An account already exists. Sign in instead.',
         invalid_credentials: 'Email or password is incorrect.',
         login_throttled: 'Too many failed attempts. Try again in 15 minutes.',
         session_invalid: 'Your session has expired. Sign in again.',
@@ -103,17 +102,39 @@ async function storeSession(token: string): Promise<void> {
     throw new AuthServiceError('storage', 'Secure session storage is unavailable.');
   }
 }
+async function storeCachedUser(user: AuthUser): Promise<void> {
+  await SecureStore.setItemAsync(CACHED_USER_KEY, JSON.stringify(user), secureOptions);
+}
+async function getCachedUser(): Promise<AuthUser | null> {
+  try {
+    const stored = await SecureStore.getItemAsync(CACHED_USER_KEY);
+    if (!stored) return null;
+    const parsed: unknown = JSON.parse(stored);
+    const result = userSchema.safeParse(parsed);
+    return result.success ? result.data : null;
+  } catch {
+    return null;
+  }
+}
+async function clearLocalSession(): Promise<void> {
+  await Promise.all([
+    SecureStore.deleteItemAsync(SESSION_KEY),
+    SecureStore.deleteItemAsync(CACHED_USER_KEY),
+  ]);
+}
 async function establish(response: z.infer<typeof sessionSchema>): Promise<AuthUser> {
   await storeSession(response.token);
   try {
-    return (
+    const user = (
       await request('/v1/auth/session', userResponseSchema, {
         method: 'GET',
         token: response.token,
       })
     ).user;
+    await storeCachedUser(user).catch(() => undefined);
+    return user;
   } catch (error) {
-    await SecureStore.deleteItemAsync(SESSION_KEY).catch(() => undefined);
+    await clearLocalSession().catch(() => undefined);
     throw error;
   }
 }
@@ -123,13 +144,7 @@ export async function signUp(input: {
   email: string;
   password: string;
 }): Promise<AuthUser> {
-  const ownerToken = await getOwnerToken();
-  if (!ownerToken)
-    throw new AuthServiceError('owner_setup_required', 'Complete private owner setup first.');
-  const response = await request('/v1/auth/register', sessionSchema, {
-    token: ownerToken,
-    body: input,
-  });
+  const response = await request('/v1/auth/register', sessionSchema, { body: input });
   return establish(response);
 }
 export async function signIn(input: { email: string; password: string }): Promise<AuthUser> {
@@ -143,7 +158,9 @@ export async function getSavedSessionToken(): Promise<string | null> {
     throw new AuthServiceError('storage', 'Secure session storage is unavailable.');
   }
 }
-export async function restoreSession(): Promise<AuthUser | null> {
+export type SessionRestoreResult = { user: AuthUser | null; remotelyVerified: boolean };
+
+export async function restoreSession(): Promise<SessionRestoreResult> {
   const pending = await SecureStore.getItemAsync(PENDING_REVOKE_KEY);
   if (pending) {
     try {
@@ -155,20 +172,31 @@ export async function restoreSession(): Promise<AuthUser | null> {
     }
   }
   const token = await getSavedSessionToken();
-  if (!token) return null;
+  if (!token) {
+    await SecureStore.deleteItemAsync(CACHED_USER_KEY).catch(() => undefined);
+    return { user: null, remotelyVerified: false };
+  }
   try {
-    return (await request('/v1/auth/session', userResponseSchema, { method: 'GET', token })).user;
+    const user = (await request('/v1/auth/session', userResponseSchema, { method: 'GET', token }))
+      .user;
+    await storeCachedUser(user).catch(() => undefined);
+    return { user, remotelyVerified: true };
   } catch (error) {
     if (error instanceof AuthServiceError && error.code === 'session_invalid') {
-      await SecureStore.deleteItemAsync(SESSION_KEY);
-      return null;
+      await clearLocalSession();
+      return { user: null, remotelyVerified: false };
     }
+    const cached = await getCachedUser();
+    if (cached) return { user: cached, remotelyVerified: false };
     throw error;
   }
 }
 export async function signOut(): Promise<{ serverRevoked: boolean }> {
   const token = await getSavedSessionToken();
-  if (!token) return { serverRevoked: true };
+  if (!token) {
+    await SecureStore.deleteItemAsync(CACHED_USER_KEY);
+    return { serverRevoked: true };
+  }
   let serverRevoked = false;
   try {
     await request('/v1/auth/logout', logoutSchema, { token });
@@ -180,7 +208,7 @@ export async function signOut(): Promise<{ serverRevoked: boolean }> {
         () => undefined,
       );
   } finally {
-    await SecureStore.deleteItemAsync(SESSION_KEY);
+    await clearLocalSession();
   }
   return { serverRevoked };
 }

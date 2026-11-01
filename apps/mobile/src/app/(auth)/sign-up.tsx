@@ -2,9 +2,8 @@ import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
 import { useForm } from 'react-hook-form';
-import { Alert, Text, View } from 'react-native';
-import { Button, IconButton } from '../../components/ui/button';
-import { AppIcon } from '../../components/ui/app-icon';
+import { Text, View } from 'react-native';
+import { Button } from '../../components/ui/button';
 import { FormMessage } from '../../components/ui/form-message';
 import { FormTextField } from '../../components/ui/form-text-field';
 import { ScreenLayout } from '../../components/layout/screen-layout';
@@ -17,12 +16,12 @@ import { signUpSchema, type SignUpInput } from '../../features/auth/auth-schemas
 
 export default function SignUpScreen() {
   const router = useRouter();
-  const { signUp, ownerTokenAvailable } = useAuth();
+  const { signUp } = useAuth();
   const { showToast } = useToast();
   const [error, setError] = useState<string | null>(null);
   const form = useForm<SignUpInput>({
     resolver: zodResolver(signUpSchema),
-    mode: 'onBlur',
+    mode: 'onChange',
     reValidateMode: 'onChange',
     defaultValues: { fullName: '', email: '', password: '', confirmPassword: '' },
   });
@@ -53,20 +52,7 @@ export default function SignUpScreen() {
       <AuthBrand />
       <AppHeader
         title="Create your account"
-        subtitle="Start building better habits."
-        action={
-          <IconButton
-            accessibilityLabel="Sign up help"
-            accessibilityHint="Shows a short explanation of creating your account."
-            icon={<AppIcon name="help" size={20} color="#334155" />}
-            onPress={() =>
-              Alert.alert(
-                'Create your account',
-                'Only the private owner can create the first account.',
-              )
-            }
-          />
-        }
+        subtitle="Create your Streak account to get started."
       />
       <FormTextField
         control={form.control}
@@ -108,19 +94,6 @@ export default function SignUpScreen() {
         returnKeyType="done"
         onSubmitEditing={() => void submit()}
       />
-      {!ownerTokenAvailable ? (
-        <View className="mb-4">
-          <FormMessage
-            message="Complete private owner setup before creating the account."
-            tone="info"
-          />
-          <Button
-            title="Set up owner access"
-            variant="quiet"
-            onPress={() => router.push('/setup')}
-          />
-        </View>
-      ) : null}
       {error ? (
         <View className="mb-4">
           <FormMessage message={error} />
@@ -129,7 +102,7 @@ export default function SignUpScreen() {
       <Button
         title="Create Account"
         loading={form.formState.isSubmitting}
-        disabled={!form.formState.isValid || !ownerTokenAvailable}
+        disabled={form.formState.isSubmitting}
         onPress={() => void submit()}
       />
       <View className="mt-auto pt-8">

@@ -8,7 +8,7 @@ import {
   type PropsWithChildren,
 } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { getOwnerToken } from '../owner/owner-service';
+import { AppState } from 'react-native';
 import {
   AuthServiceError,
   restoreSession,
@@ -17,15 +17,13 @@ import {
   signUp as signUpRequest,
   type AuthUser,
 } from './auth-service';
+import { type AuthStatus } from './auth-navigation';
 
-type AuthStatus = 'loading' | 'signed-out' | 'authenticated' | 'offline';
 type AuthContextValue = {
   status: AuthStatus;
   user: AuthUser | null;
-  ownerTokenAvailable: boolean;
   error: string | null;
   retry: () => Promise<void>;
-  refreshOwnerSetup: () => Promise<void>;
   signIn: (input: { email: string; password: string }) => Promise<AuthUser>;
   signUp: (input: { fullName: string; email: string; password: string }) => Promise<AuthUser>;
   signOut: () => Promise<boolean>;
@@ -36,18 +34,21 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<AuthStatus>('loading');
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [ownerTokenAvailable, setOwnerTokenAvailable] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const retry = useCallback(async () => {
-    setStatus('loading');
+  const retry = useCallback(async (preserveStatus = false) => {
+    if (!preserveStatus) setStatus('loading');
     setError(null);
     try {
-      const ownerToken = await getOwnerToken();
-      setOwnerTokenAvailable(!!ownerToken);
       const restored = await restoreSession();
-      setUser(restored);
-      setStatus(restored ? 'authenticated' : 'signed-out');
+      setUser(restored.user);
+      setStatus(
+        restored.user
+          ? restored.remotelyVerified
+            ? 'authenticated'
+            : 'offline-authenticated'
+          : 'signed-out',
+      );
     } catch (cause) {
       setUser(null);
       setStatus('offline');
@@ -60,9 +61,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
     void retry();
   }, [retry]);
 
-  const refreshOwnerSetup = useCallback(async () => {
-    setOwnerTokenAvailable(!!(await getOwnerToken()));
-  }, []);
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void retry(true);
+    });
+    return () => subscription.remove();
+  }, [retry]);
 
   const signIn = useCallback(async (input: { email: string; password: string }) => {
     const result = await signInRequest(input);
@@ -99,15 +103,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
     () => ({
       status,
       user,
-      ownerTokenAvailable,
       error,
       retry,
-      refreshOwnerSetup,
       signIn,
       signUp,
       signOut,
     }),
-    [status, user, ownerTokenAvailable, error, retry, refreshOwnerSetup, signIn, signUp, signOut],
+    [status, user, error, retry, signIn, signUp, signOut],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

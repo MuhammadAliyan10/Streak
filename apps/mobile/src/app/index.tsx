@@ -6,7 +6,7 @@ import { ScreenLayout } from '../components/layout/screen-layout';
 import { useAuth } from '../features/auth/auth-context';
 
 export default function IndexRoute() {
-  const { status, ownerTokenAvailable, error, retry } = useAuth();
+  const { status, error, retry } = useAuth();
   const router = useRouter();
   if (status === 'loading')
     return (
@@ -17,7 +17,8 @@ export default function IndexRoute() {
         </View>
       </ScreenLayout>
     );
-  if (status === 'authenticated') return <Redirect href="/today" />;
+  if (status === 'authenticated' || status === 'offline-authenticated')
+    return <Redirect href="/today" />;
   if (status === 'offline')
     return (
       <ScreenLayout>
@@ -37,5 +38,5 @@ export default function IndexRoute() {
         </View>
       </ScreenLayout>
     );
-  return <Redirect href={ownerTokenAvailable ? '/sign-in' : '/setup'} />;
+  return <Redirect href="/sign-in" />;
 }

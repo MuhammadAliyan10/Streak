@@ -22,6 +22,7 @@ import { Button, IconButton } from '../../components/ui/button';
 import { EmptyState, ErrorState } from '../../components/ui/feedback-state';
 import { FormTextField } from '../../components/ui/form-text-field';
 import { useAuth } from '../auth/auth-context';
+import { canAccessPrivateRoutes } from '../auth/auth-navigation';
 import {
   addHabitEntry,
   createActivityLog,
@@ -567,7 +568,7 @@ export function TodayScreen() {
         <Text className="py-10 text-center text-slate-600">Loading your day…</Text>
       </ScreenLayout>
     );
-  if (status !== 'authenticated') return <Redirect href="/" />;
+  if (!canAccessPrivateRoutes(status)) return <Redirect href="/" />;
   const changeTask = (task: PlannerTask) => {
     if (historical || taskMutation.isPending) return;
     if (task.status === 'pending')

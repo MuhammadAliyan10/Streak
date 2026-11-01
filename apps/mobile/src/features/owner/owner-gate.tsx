@@ -36,9 +36,11 @@ function readableError(error: unknown): string {
 export function OwnerGate({
   setupOnly = false,
   onSetupComplete,
+  onBack,
 }: {
   setupOnly?: boolean;
   onSetupComplete?: () => void;
+  onBack?: () => void;
 }) {
   const [status, setStatus] = useState<GateStatus>('loading');
   const [message, setMessage] = useState<string | null>(null);
@@ -125,7 +127,13 @@ export function OwnerGate({
   }
 
   if (status === 'setup') {
-    return <OwnerSetup message={message} onSuccess={finishOwnerSetup} />;
+    return (
+      <OwnerSetup
+        message={message}
+        onSuccess={finishOwnerSetup}
+        {...(setupOnly && onBack ? { onBack } : {})}
+      />
+    );
   }
 
   if (setupOnly && status === 'connected') {
@@ -269,9 +277,11 @@ function Header() {
 function OwnerSetup({
   message,
   onSuccess,
+  onBack,
 }: {
   message: string | null;
   onSuccess: () => Promise<void>;
+  onBack?: () => void;
 }) {
   const form = useForm<OwnerSetupInput>({
     resolver: zodResolver(ownerSetupSchema),
@@ -328,6 +338,11 @@ function OwnerSetup({
           Generate a 256-bit token with `pnpm owner-token:generate`. Keep it private; the app does
           not send it anywhere except your Neon Function over HTTPS.
         </Text>
+        {onBack ? (
+          <View className="mt-5">
+            <Button title="Back to sign up" variant="quiet" onPress={onBack} />
+          </View>
+        ) : null}
       </View>
     </ScreenLayout>
   );

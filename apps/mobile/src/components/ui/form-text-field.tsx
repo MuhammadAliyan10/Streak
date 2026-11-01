@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { AppIcon } from './app-icon';
 import { Controller, type Control, type FieldPathByValue, type FieldValues } from 'react-hook-form';
 import {
   Pressable,
@@ -49,7 +50,7 @@ export function FormTextField<T extends FieldValues, N extends FieldPathByValue<
       render={({ field, fieldState }) => (
         <View className="mb-5">
           <Text className="mb-2 text-sm font-medium text-ink">{label}</Text>
-          <View className="flex-row items-center rounded-xl border border-slate-300 bg-white px-4 focus:border-primary">
+          <View className="flex-row items-center rounded-lg border border-slate-300 bg-white px-4 focus:border-primary">
             <TextInput
               ref={field.ref}
               accessibilityLabel={label}
@@ -83,13 +84,13 @@ export function FormTextField<T extends FieldValues, N extends FieldPathByValue<
             {secure ? (
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={showSecret ? 'Hide secret' : 'Show secret'}
+                accessibilityLabel={`${showSecret ? 'Hide' : 'Show'} ${label.toLowerCase()}`}
                 accessibilityState={{ selected: showSecret }}
                 hitSlop={10}
                 onPress={() => setShowSecret((visible) => !visible)}
-                className="ml-3 min-h-11 justify-center px-1"
+                className="ml-3 h-11 w-11 items-center justify-center"
               >
-                <Text className="font-medium text-primary">{showSecret ? 'Hide' : 'Show'}</Text>
+                <AppIcon name={showSecret ? 'eyeClosed' : 'eye'} size={21} color="#4F46E5" />
               </Pressable>
             ) : null}
           </View>

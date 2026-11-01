@@ -90,7 +90,7 @@ async function syncOperations(
 }
 
 export function createOwnerHandler(pool: Pool) {
-  const authHandler = createAuthHandler(pool, (request) => isOwnerTokenAuthorized(request, pool));
+  const authHandler = createAuthHandler(pool);
   return async function fetch(request: Request): Promise<Response> {
     const path = new URL(request.url).pathname.replace(/\/$/, '') || '/';
 

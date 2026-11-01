@@ -11,6 +11,7 @@ import { Button } from '../../components/ui/button';
 import { FormTextField } from '../../components/ui/form-text-field';
 import { FormMessage } from '../../components/ui/form-message';
 import { useAuth } from '../auth/auth-context';
+import { canAccessPrivateRoutes } from '../auth/auth-navigation';
 import { getHabitBundle, saveHabit, type HabitRecord } from './habit-repository';
 import { habitHref } from './habit-navigation';
 import { dateAdd, habitSchema, todayInTimezone, type HabitInput } from './domain/habit-domain';
@@ -213,7 +214,7 @@ export function HabitFormScreen({ editing = false }: { editing?: boolean }) {
     }
     mutation.mutate(values);
   });
-  if (status !== 'authenticated') return <Redirect href="/" />;
+  if (!canAccessPrivateRoutes(status)) return <Redirect href="/" />;
   const cancel = () =>
     form.formState.isDirty
       ? Alert.alert('Discard changes?', 'Your unsaved habit changes will be lost.', [
